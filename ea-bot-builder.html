@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AlgoForge — MQL5 EA Builder AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #080c18;
+    --bg2: #0d1424;
+    --bg3: #111827;
+    --card: #0f1629;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245,158,11,0.12);
+    --amber-glow: rgba(245,158,11,0.25);
+    --green: #10b981;
+    --green-dim: rgba(16,185,129,0.1);
+    --red: #ef4444;
+    --text: #e8ecf4;
+    --muted: #8892a4;
+    --faint: #4a5568;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+    --display: 'Syne', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 16px; line-height: 1.6; overflow-x: hidden; }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 2.5rem;
+    background: rgba(8,12,24,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo { font-family: var(--display); font-weight: 800; font-size: 1.25rem; color: var(--amber); letter-spacing: -0.5px; }
+  .nav-logo span { color: var(--text); }
+  .nav-links { display: flex; gap: 2rem; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta {
+    background: var(--amber); color: #000; font-weight: 600; font-size: 0.875rem;
+    padding: 0.5rem 1.25rem; border-radius: 6px; text-decoration: none;
+    transition: opacity 0.2s;
+  }
+  .nav-cta:hover { opacity: 0.85; }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; text-align: center; padding: 8rem 2rem 4rem;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; top: 20%; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 400px;
+    background: radial-gradient(ellipse, rgba(245,158,11,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: var(--amber-dim); border: 1px solid rgba(245,158,11,0.3);
+    border-radius: 100px; padding: 0.35rem 1rem;
+    font-size: 0.8rem; font-weight: 500; color: var(--amber);
+    margin-bottom: 1.5rem; font-family: var(--mono);
+    animation: fadeUp 0.6s ease both;
+  }
+  .hero-badge::before { content: '●'; font-size: 0.6rem; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .hero h1 {
+    font-family: var(--display); font-size: clamp(2.5rem, 6vw, 5rem); font-weight: 800;
+    line-height: 1.05; letter-spacing: -2px; margin-bottom: 1.25rem;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  .hero h1 em { font-style: normal; color: var(--amber); }
+  .hero p {
+    max-width: 560px; color: var(--muted); font-size: 1.1rem; font-weight: 300;
+    margin-bottom: 2.5rem; line-height: 1.75;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+  .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; animation: fadeUp 0.6s 0.3s ease both; }
+  .btn-primary {
+    background: var(--amber); color: #000; font-weight: 700; font-size: 0.95rem;
+    padding: 0.85rem 2rem; border-radius: 8px; text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 0 30px var(--amber-glow);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 0 45px var(--amber-glow); }
+  .btn-ghost {
+    background: transparent; color: var(--text); font-weight: 500; font-size: 0.95rem;
+    padding: 0.85rem 2rem; border-radius: 8px; text-decoration: none;
+    border: 1px solid var(--border2); transition: background 0.15s;
+  }
+  .btn-ghost:hover { background: rgba(255,255,255,0.05); }
+
+  /* TICKER */
+  .ticker {
+    background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    overflow: hidden; padding: 0.6rem 0; margin-top: 0;
+  }
+  .ticker-inner { display: flex; gap: 3rem; animation: ticker 30s linear infinite; white-space: nowrap; }
+  @keyframes ticker { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+  .tick-item { font-family: var(--mono); font-size: 0.78rem; display: flex; gap: 0.75rem; }
+  .tick-pair { color: var(--muted); }
+  .tick-up { color: var(--green); }
+  .tick-dn { color: var(--red); }
+
+  /* DEMO TERMINAL */
+  .demo-block {
+    max-width: 780px; margin: 3rem auto 0; animation: fadeUp 0.6s 0.4s ease both;
+    border-radius: 12px; border: 1px solid var(--border2); overflow: hidden;
+    background: var(--card);
+  }
+  .term-bar {
+    display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem;
+    background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border);
+  }
+  .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .dot-r { background: #ff5f57; }
+  .dot-y { background: #febc2e; }
+  .dot-g { background: #28c840; }
+  .term-title { font-family: var(--mono); font-size: 0.75rem; color: var(--faint); margin-left: 0.5rem; }
+  .term-body { padding: 1.25rem 1.5rem; font-family: var(--mono); font-size: 0.82rem; line-height: 1.9; }
+  .term-prompt { color: var(--amber); }
+  .term-user { color: var(--text); }
+  .term-ai { color: var(--green); }
+  .term-code { color: #93c5fd; margin-left: 1rem; }
+  .term-comment { color: var(--faint); }
+
+  /* FEATURES */
+  .section { padding: 6rem 2rem; max-width: 1100px; margin: 0 auto; }
+  .section-label { font-family: var(--mono); font-size: 0.75rem; color: var(--amber); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 0.75rem; }
+  .section-title { font-family: var(--display); font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 700; letter-spacing: -1px; margin-bottom: 1rem; }
+  .section-sub { color: var(--muted); max-width: 480px; font-weight: 300; }
+
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-top: 3rem; }
+  .feat {
+    background: var(--bg); padding: 1.75rem; transition: background 0.2s;
+    display: flex; flex-direction: column; gap: 0.75rem;
+  }
+  .feat:hover { background: var(--card); }
+  .feat-icon { font-size: 1.5rem; margin-bottom: 0.25rem; }
+  .feat-title { font-family: var(--display); font-size: 1rem; font-weight: 600; }
+  .feat-desc { color: var(--muted); font-size: 0.875rem; line-height: 1.7; font-weight: 300; }
+
+  /* STEPS */
+  .steps { display: flex; flex-direction: column; gap: 1.5rem; margin-top: 3rem; }
+  .step {
+    display: grid; grid-template-columns: 48px 1fr; gap: 1.25rem; align-items: start;
+    padding: 1.5rem; background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    transition: border-color 0.2s;
+  }
+  .step:hover { border-color: var(--border2); }
+  .step-num {
+    width: 48px; height: 48px; border-radius: 8px; background: var(--amber-dim);
+    border: 1px solid rgba(245,158,11,0.3); display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 1rem; font-weight: 500; color: var(--amber); flex-shrink: 0;
+  }
+  .step-title { font-family: var(--display); font-size: 1.05rem; font-weight: 600; margin-bottom: 0.4rem; }
+  .step-desc { color: var(--muted); font-size: 0.875rem; font-weight: 300; line-height: 1.7; }
+
+  /* DIVIDER */
+  .divider { border: none; border-top: 1px solid var(--border); }
+
+  /* CHAT */
+  #chat-section { background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .chat-wrap { max-width: 860px; margin: 0 auto; padding: 5rem 2rem; }
+  .chat-container {
+    border: 1px solid var(--border2); border-radius: 12px; overflow: hidden;
+    background: var(--bg); display: flex; flex-direction: column; height: 580px;
+  }
+  .chat-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.25rem; background: var(--card); border-bottom: 1px solid var(--border);
+  }
+  .chat-header-left { display: flex; align-items: center; gap: 0.75rem; }
+  .chat-status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  .chat-header-title { font-family: var(--display); font-weight: 600; font-size: 0.95rem; }
+  .chat-header-sub { font-size: 0.75rem; color: var(--muted); font-family: var(--mono); }
+  .chat-model-badge {
+    font-family: var(--mono); font-size: 0.7rem; color: var(--amber);
+    background: var(--amber-dim); border: 1px solid rgba(245,158,11,0.2);
+    padding: 0.2rem 0.6rem; border-radius: 4px;
+  }
+
+  .chat-messages { flex: 1; overflow-y: auto; padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-track { background: transparent; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 2px; }
+
+  .msg { display: flex; gap: 0.75rem; align-items: flex-start; animation: fadeUp 0.3s ease; }
+  .msg-avatar {
+    width: 30px; height: 30px; border-radius: 6px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700;
+  }
+  .msg-user .msg-avatar { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+  .msg-ai .msg-avatar { background: var(--green-dim); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
+  .msg-bubble {
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 0.75rem 1rem; font-size: 0.875rem; line-height: 1.7; max-width: 85%;
+  }
+  .msg-user .msg-bubble { background: rgba(245,158,11,0.06); border-color: rgba(245,158,11,0.15); }
+  .msg-bubble pre {
+    background: #060a14; border: 1px solid var(--border); border-radius: 6px;
+    padding: 1rem; margin-top: 0.75rem; overflow-x: auto; font-family: var(--mono);
+    font-size: 0.78rem; line-height: 1.7; color: #93c5fd;
+  }
+  .msg-bubble code { font-family: var(--mono); font-size: 0.8rem; color: #93c5fd; }
+  .msg-bubble .copy-btn {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-family: var(--mono); font-size: 0.7rem; color: var(--amber);
+    background: var(--amber-dim); border: 1px solid rgba(245,158,11,0.2);
+    padding: 0.25rem 0.6rem; border-radius: 4px; cursor: pointer; margin-top: 0.5rem;
+    transition: opacity 0.2s;
+  }
+  .msg-bubble .copy-btn:hover { opacity: 0.7; }
+
+  .typing-indicator { display: flex; gap: 4px; padding: 4px 0; }
+  .typing-indicator span { width: 6px; height: 6px; border-radius: 50%; background: var(--green); opacity: 0.4; animation: typing 1.2s infinite; }
+  .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typing { 0%,100%{opacity:0.4;transform:translateY(0)} 50%{opacity:1;transform:translateY(-3px)} }
+
+  .chat-input-bar {
+    display: flex; gap: 0.75rem; align-items: flex-end;
+    padding: 1rem 1.25rem; background: var(--card); border-top: 1px solid var(--border);
+  }
+  .chat-input {
+    flex: 1; background: var(--bg); border: 1px solid var(--border2); border-radius: 8px;
+    padding: 0.65rem 1rem; color: var(--text); font-family: var(--sans); font-size: 0.875rem;
+    resize: none; outline: none; min-height: 42px; max-height: 140px; transition: border-color 0.2s;
+    line-height: 1.5;
+  }
+  .chat-input:focus { border-color: rgba(245,158,11,0.5); }
+  .chat-input::placeholder { color: var(--faint); }
+  .send-btn {
+    background: var(--amber); color: #000; border: none; border-radius: 8px;
+    width: 42px; height: 42px; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; transition: opacity 0.2s;
+    font-size: 1rem;
+  }
+  .send-btn:hover { opacity: 0.85; }
+  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .quick-prompts { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+  .quick-btn {
+    font-size: 0.75rem; color: var(--muted); background: var(--bg3);
+    border: 1px solid var(--border); border-radius: 100px; padding: 0.3rem 0.75rem;
+    cursor: pointer; transition: all 0.15s; font-family: var(--sans);
+  }
+  .quick-btn:hover { border-color: var(--amber); color: var(--amber); }
+
+  /* PRICING */
+  .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-top: 3rem; }
+  .price-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 2rem;
+    display: flex; flex-direction: column; gap: 1rem; transition: border-color 0.2s;
+  }
+  .price-card:hover { border-color: var(--border2); }
+  .price-card.featured { border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.04); }
+  .price-badge { font-family: var(--mono); font-size: 0.7rem; color: var(--amber); background: var(--amber-dim); border-radius: 4px; padding: 0.2rem 0.5rem; align-self: flex-start; }
+  .price-name { font-family: var(--display); font-size: 1.1rem; font-weight: 700; }
+  .price-amount { font-family: var(--display); font-size: 2.5rem; font-weight: 800; letter-spacing: -2px; }
+  .price-amount span { font-size: 1rem; color: var(--muted); font-weight: 400; letter-spacing: 0; }
+  .price-desc { color: var(--muted); font-size: 0.85rem; font-weight: 300; }
+  .price-features { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem; }
+  .price-features li { font-size: 0.875rem; color: var(--muted); display: flex; gap: 0.5rem; }
+  .price-features li::before { content: '✓'; color: var(--green); font-weight: 700; flex-shrink: 0; }
+  .price-cta {
+    display: block; text-align: center; padding: 0.75rem; border-radius: 8px;
+    font-weight: 600; font-size: 0.9rem; text-decoration: none; margin-top: auto;
+    transition: opacity 0.2s;
+  }
+  .price-cta-ghost { border: 1px solid var(--border2); color: var(--text); }
+  .price-cta-ghost:hover { background: rgba(255,255,255,0.04); }
+  .price-cta-solid { background: var(--amber); color: #000; }
+  .price-cta-solid:hover { opacity: 0.85; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border); padding: 2.5rem 2.5rem;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+  }
+  .footer-logo { font-family: var(--display); font-weight: 800; color: var(--amber); font-size: 1.1rem; }
+  footer p { color: var(--faint); font-size: 0.8rem; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* API Key setup */
+  .api-setup {
+    background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1rem;
+    font-size: 0.82rem; color: var(--muted);
+  }
+  .api-setup strong { color: var(--amber); }
+  .api-key-input {
+    width: 100%; background: var(--bg); border: 1px solid var(--border2); border-radius: 6px;
+    padding: 0.5rem 0.75rem; color: var(--text); font-family: var(--mono); font-size: 0.8rem;
+    outline: none; margin-top: 0.5rem;
+  }
+  .api-key-input:focus { border-color: rgba(245,158,11,0.5); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Algo<span>Forge</span></div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how-it-works">How it works</a>
+    <a href="#chat-section">Try it</a>
+    <a href="#pricing">Pricing</a>
+  </div>
+  <a href="#chat-section" class="nav-cta">Start Building →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">MQL5 Expert Advisor Generator — Powered by AI</div>
+  <h1>Build <em>MQL5 EAs</em><br>in plain English</h1>
+  <p>Describe your trading strategy. AlgoForge writes clean, production-ready MetaTrader 5 Expert Advisor code — no coding skills required.</p>
+  <div class="hero-actions">
+    <a href="#chat-section" class="btn-primary">Build My EA Now</a>
+    <a href="#how-it-works" class="btn-ghost">See how it works</a>
+  </div>
+
+  <div class="demo-block">
+    <div class="term-bar">
+      <div class="dot dot-r"></div>
+      <div class="dot dot-y"></div>
+      <div class="dot dot-g"></div>
+      <span class="term-title">AlgoForge — MQL5 Terminal</span>
+    </div>
+    <div class="term-body">
+      <div><span class="term-prompt">You › </span><span class="term-user">Build an RSI breakout EA with trailing stop and 1% risk per trade</span></div>
+      <div style="height:0.5rem"></div>
+      <div><span class="term-ai">AI  › </span><span style="color:var(--muted)">Before coding, let me confirm a few things:</span></div>
+      <div style="color:var(--muted);margin-left:3.2rem">• RSI period: 14? Overbought/oversold levels: 70/30?</div>
+      <div style="color:var(--muted);margin-left:3.2rem">• Trailing stop in pips or ATR-based?</div>
+      <div style="height:0.5rem"></div>
+      <div><span class="term-prompt">You › </span><span class="term-user">RSI 14, levels 70/30, trailing 20 pips</span></div>
+      <div style="height:0.5rem"></div>
+      <div><span class="term-ai">AI  › </span><span style="color:var(--muted)">Generating your EA...</span></div>
+      <div class="term-code">  double rsi = iRSI(_Symbol, PERIOD_H1, 14, PRICE_CLOSE, 0);</div>
+      <div class="term-code">  if(rsi > 70 && !PositionExists()) OpenSell();</div>
+      <div class="term-code">  if(rsi &lt; 30 && !PositionExists()) OpenBuy();</div>
+      <div class="term-comment">  // TrailingStop: 20 pips | Risk: 1% per trade | Clean & ready to compile ✓</div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-inner" id="tickerInner"></div>
+</div>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="section-label">Why AlgoForge</div>
+  <h2 class="section-title">Everything you need to<br>automate your trading</h2>
+  <p class="section-sub">From simple crossovers to complex multi-condition systems — describe it, build it, deploy it.</p>
+
+  <div class="features-grid">
+    <div class="feat">
+      <div class="feat-icon">🗣️</div>
+      <div class="feat-title">Plain English Input</div>
+      <div class="feat-desc">Speak like a trader. Say "RSI cross with trailing stop" — not MQL5 syntax. The AI translates your strategy perfectly.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🤖</div>
+      <div class="feat-title">Asks Before Coding</div>
+      <div class="feat-desc">No guessing. The AI asks targeted follow-up questions to clarify your logic before writing a single line of code.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">⚙️</div>
+      <div class="feat-title">MQL5 Ready Code</div>
+      <div class="feat-desc">Output compiles directly in MetaEditor. Clean variable names, proper comments, modular structure — production quality.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🔁</div>
+      <div class="feat-title">Unlimited EAs</div>
+      <div class="feat-desc">Build as many bots as you want. No per-project fees, no usage caps. One subscription, infinite strategies.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">💡</div>
+      <div class="feat-title">Advanced Logic Support</div>
+      <div class="feat-desc">Trailing stops, break-even logic, multi-timeframe filters, news avoidance, martingale, grid — all supported.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🕹️</div>
+      <div class="feat-title">Version Control</div>
+      <div class="feat-desc">Build v1.0, iterate to v1.1. Modify, extend, or branch your EA anytime without losing previous versions.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🔒</div>
+      <div class="feat-title">Your Strategy is Private</div>
+      <div class="feat-desc">Your prompts and strategies are yours alone. No one sees how you use it — complete confidentiality guaranteed.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🔐</div>
+      <div class="feat-title">Full Commercial Rights</div>
+      <div class="feat-desc">The code you generate is entirely yours. Use it, sell it, distribute it — no hidden licenses or lock-in.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">✨</div>
+      <div class="feat-title">Modify Existing Code</div>
+      <div class="feat-desc">Paste your old EA and ask for changes. Fix bugs, add filters, or refactor logic in seconds — not hours.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how-it-works">
+  <div class="section-label">The Process</div>
+  <h2 class="section-title">From idea to compiled<br>EA in minutes</h2>
+  <p class="section-sub">AlgoForge guides you through each step — no prior coding knowledge needed.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div>
+        <div class="step-title">Describe your strategy in plain language</div>
+        <div class="step-desc">Tell the AI what your bot should do. Use trading terms you already know — "buy when EMA 20 crosses above EMA 50 on H1, close when RSI hits 70."</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div>
+        <div class="step-title">AI asks smart clarifying questions</div>
+        <div class="step-desc">Before writing code, AlgoForge checks the details — lot sizing method, stop loss distance, re-entry rules, trading hours, and more. No assumptions.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div>
+        <div class="step-title">Receive clean, ready-to-compile MQL5 code</div>
+        <div class="step-desc">The AI generates a complete Expert Advisor with proper inputs, risk management, and modular structure. Copy it directly into MetaEditor.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div>
+        <div class="step-title">Iterate, extend, or deploy</div>
+        <div class="step-desc">Ask for changes in natural language — "add a news filter" or "make the lot size dynamic." AlgoForge updates the code instantly.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- CHAT SECTION -->
+<section id="chat-section">
+  <div class="chat-wrap">
+    <div style="text-align:center; margin-bottom:2.5rem;">
+      <div class="section-label" style="justify-content:center;display:flex;">Live Demo</div>
+      <h2 class="section-title" style="margin-bottom:0.75rem;">Try AlgoForge right now</h2>
+      <p style="color:var(--muted); font-weight:300;">Type your strategy below and watch your EA come to life.</p>
+    </div>
+
+    <div class="api-setup">
+      <strong>⚡ Enter your Anthropic API key</strong> to activate the AI — your key is stored only in this browser session and never sent anywhere except Anthropic's servers.
+      <input type="password" class="api-key-input" id="apiKeyInput" placeholder="sk-ant-api03-..." autocomplete="off">
+    </div>
+
+    <div class="chat-container">
+      <div class="chat-header">
+        <div class="chat-header-left">
+          <div class="chat-status-dot"></div>
+          <div>
+            <div class="chat-header-title">AlgoForge MQL5 Assistant</div>
+            <div class="chat-header-sub">Powered by Claude · MQL5 Expert</div>
+          </div>
+        </div>
+        <div class="chat-model-badge">claude-sonnet-4</div>
+      </div>
+
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg msg-ai">
+          <div class="msg-avatar">AF</div>
+          <div class="msg-bubble">
+            Welcome to <strong>AlgoForge</strong> — your MQL5 Expert Advisor builder.<br><br>
+            Tell me about your trading strategy in plain English. I'll ask a few questions to clarify the details, then generate clean, ready-to-compile MQL5 code.<br><br>
+            <em style="color:var(--muted);font-size:0.82rem;">Example: "Build me an RSI mean-reversion EA with 1% risk and a trailing stop"</em>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding: 0 1.25rem 0.5rem; background:var(--card);">
+        <div class="quick-prompts" id="quickPrompts">
+          <button class="quick-btn" onclick="useQuick(this)">RSI crossover EA with trailing stop</button>
+          <button class="quick-btn" onclick="useQuick(this)">Moving average EA, fixed lot 0.1</button>
+          <button class="quick-btn" onclick="useQuick(this)">Breakout EA with ATR stop loss</button>
+          <button class="quick-btn" onclick="useQuick(this)">Grid bot for EURUSD</button>
+        </div>
+      </div>
+
+      <div class="chat-input-bar">
+        <textarea class="chat-input" id="chatInput" placeholder="Describe your EA strategy..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- PRICING -->
+<section class="section" id="pricing">
+  <div class="section-label">Pricing</div>
+  <h2 class="section-title">Simple, transparent pricing</h2>
+  <p class="section-sub">No hidden fees. Cancel anytime. Build unlimited EAs from day one.</p>
+
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-name">Starter</div>
+      <div class="price-amount">$29<span>/mo</span></div>
+      <div class="price-desc">For traders just getting started with automation.</div>
+      <ul class="price-features">
+        <li>Unlimited EA generation</li>
+        <li>MQL5 code output</li>
+        <li>Basic indicators (RSI, MA, MACD)</li>
+        <li>Risk management modules</li>
+        <li>Email support</li>
+      </ul>
+      <a href="#" class="price-cta price-cta-ghost">Get Started</a>
+    </div>
+
+    <div class="price-card featured">
+      <div class="price-badge">Most Popular</div>
+      <div class="price-name">Pro</div>
+      <div class="price-amount">$69<span>/mo</span></div>
+      <div class="price-desc">For active traders who want the full toolkit.</div>
+      <ul class="price-features">
+        <li>Everything in Starter</li>
+        <li>Multi-timeframe strategies</li>
+        <li>Advanced trailing & break-even logic</li>
+        <li>Code modification & debugging</li>
+        <li>Version control system</li>
+        <li>Priority support</li>
+      </ul>
+      <a href="#" class="price-cta price-cta-solid">Start Pro Trial</a>
+    </div>
+
+    <div class="price-card">
+      <div class="price-name">Lifetime</div>
+      <div class="price-amount">$299<span> once</span></div>
+      <div class="price-desc">Pay once. Build forever. Best value long-term.</div>
+      <ul class="price-features">
+        <li>All Pro features, forever</li>
+        <li>All future updates included</li>
+        <li>Commercial resale rights</li>
+        <li>1-on-1 onboarding call</li>
+        <li>Dedicated Slack channel</li>
+      </ul>
+      <a href="#" class="price-cta price-cta-ghost">Get Lifetime Access</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">AlgoForge</div>
+  <p>© 2025 AlgoForge. All rights reserved. Not financial advice.</p>
+  <div style="display:flex;gap:1.5rem;">
+    <a href="#" style="color:var(--faint);font-size:0.8rem;text-decoration:none;">Privacy</a>
+    <a href="#" style="color:var(--faint);font-size:0.8rem;text-decoration:none;">Terms</a>
+    <a href="#" style="color:var(--faint);font-size:0.8rem;text-decoration:none;">Contact</a>
+  </div>
+</footer>
+
+<script>
+// Ticker data
+const ticks = [
+  {p:'EURUSD',v:'1.08412',c:'+0.0012',up:true},{p:'GBPUSD',v:'1.27183',c:'-0.0034',up:false},
+  {p:'XAUUSD',v:'2341.50',c:'+8.20',up:true},{p:'USDJPY',v:'149.82',c:'+0.31',up:true},
+  {p:'BTCUSD',v:'67,240',c:'-320',up:false},{p:'USDCAD',v:'1.3601',c:'-0.0018',up:false},
+  {p:'AUDUSD',v:'0.6542',c:'+0.0021',up:true},{p:'NASDAQ',v:'17,842',c:'+124',up:true},
+];
+const ti = document.getElementById('tickerInner');
+const allTicks = [...ticks,...ticks,...ticks,...ticks];
+ti.innerHTML = allTicks.map(t=>`<span class="tick-item"><span class="tick-pair">${t.p}</span><span style="color:var(--text)">${t.v}</span><span class="${t.up?'tick-up':'tick-dn'}">${t.c}</span></span>`).join('');
+
+// Chat logic
+const SYSTEM = `You are AlgoForge, an expert MQL5 (MetaTrader 5) Expert Advisor developer AI assistant. Your specialty is generating clean, production-ready MQL5 code for Expert Advisors (trading bots).
+
+BEHAVIOR RULES:
+1. Before writing any code, ALWAYS ask 2-4 clarifying questions about the strategy details (timeframe, indicators, lot size, stop loss, take profit, risk management method, etc.) — unless the user has already specified everything.
+2. Once you have enough info, generate complete, compilable MQL5 code.
+3. Code must follow MQL5 best practices: proper OnInit(), OnTick(), OnDeinit() functions, input parameters at the top, error handling, and comments.
+4. Always include risk management (lot size calculation or fixed lot input).
+5. Format code in code blocks.
+6. After generating code, briefly explain what it does and suggest possible next improvements.
+7. Be conversational but professional. Speak like a trading expert, not just a coder.
+8. If user asks to modify code, ask them to paste their current code first if they haven't.
+
+Never hallucinate MQL5 functions — only use real, valid MQL5 API functions.`;
+
+let history = [];
+let isLoading = false;
+
+function getApiKey() {
+  return document.getElementById('apiKeyInput').value.trim();
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function useQuick(btn) {
+  document.getElementById('chatInput').value = btn.textContent;
+  sendMessage();
+}
+
+function addMessage(role, content) {
+  const box = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = `msg msg-${role==='user'?'user':'ai'}`;
+  const avatar = role==='user' ? 'YOU' : 'AF';
+  let html = content;
+  // Parse code blocks
+  html = html.replace(/```(?:mql5|mq5|cpp|c\+\+)?\n?([\s\S]*?)```/g, (_, code) => {
+    const escaped = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return `<pre>${escaped}</pre><button class="copy-btn" onclick="copyCode(this)">⎘ Copy Code</button>`;
+  });
+  html = html.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  html = html.replace(/\*(.*?)\*/g,'<em>$1</em>');
+  html = html.replace(/`([^`]+)`/g,'<code>$1</code>');
+  html = html.replace(/\n/g,'<br>');
+  div.innerHTML = `<div class="msg-avatar">${avatar}</div><div class="msg-bubble">${html}</div>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function addTyping() {
+  const box = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg msg-ai'; div.id = 'typingMsg';
+  div.innerHTML = `<div class="msg-avatar">AF</div><div class="msg-bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById('typingMsg');
+  if (el) el.remove();
+}
+
+function copyCode(btn) {
+  const pre = btn.previousElementSibling;
+  navigator.clipboard.writeText(pre.textContent).then(()=>{
+    btn.textContent = '✓ Copied!';
+    setTimeout(()=>{ btn.textContent = '⎘ Copy Code'; }, 2000);
+  });
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text || isLoading) return;
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    alert('Please enter your Anthropic API key above the chat to use AlgoForge.');
+    document.getElementById('apiKeyInput').focus();
+    return;
+  }
+
+  input.value = ''; input.style.height = 'auto';
+  document.getElementById('quickPrompts').style.display = 'none';
+  addMessage('user', text);
+  history.push({ role: 'user', content: text });
+
+  isLoading = true;
+  document.getElementById('sendBtn').disabled = true;
+  addTyping();
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4096,
+        system: SYSTEM,
+        messages: history
+      })
+    });
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const reply = data.content[0].text;
+    history.push({ role: 'assistant', content: reply });
+    removeTyping();
+    addMessage('assistant', reply);
+  } catch(err) {
+    removeTyping();
+    addMessage('assistant', `⚠️ Error: ${err.message}\n\nPlease check your API key and try again.`);
+  }
+
+  isLoading = false;
+  document.getElementById('sendBtn').disabled = false;
+}
+</script>
+</body>
+</html>
